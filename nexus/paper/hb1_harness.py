@@ -26,6 +26,7 @@ from nexus.journal import Journal
 from nexus.polymarket.clob import Book, ClobPublicClient, fill_from_book
 from nexus.polymarket.gamma import GammaClient, Market
 from nexus.paper.engine import PaperConfig, PaperEngine
+from nexus.paper.state import load_account, save_account
 
 # D2 pre-registered economics (must match nexus.research.hb1_backtest).
 ZONE_THRESHOLD = 0.97
@@ -233,19 +234,23 @@ def run(
 def main() -> None:
     parser = argparse.ArgumentParser(description="H-B1 paper harness (daily pass)")
     parser.add_argument("--journal", default="data/hb1_paper.jsonl")
+    parser.add_argument("--account", default="data/hb1_account.json")
     parser.add_argument("--max-markets", type=int, default=300)
     parser.add_argument("--entry-usd", type=float, default=MAX_ENTRY_USD)
     args = parser.parse_args()
 
     gamma = GammaClient()
     clob = ClobPublicClient()
-    engine = PaperEngine(PaperConfig())
+    cfg = PaperConfig()
+    engine = PaperEngine(cfg, Journal(args.journal))
+    engine.account = load_account(args.account, cfg)
     journal = Journal(args.journal)
 
     summary = run(
         gamma, clob, engine, journal,
         max_markets=args.max_markets, entry_usd=args.entry_usd,
     )
+    save_account(engine.account, args.account)
     print(json.dumps(summary, indent=1))
 
 
