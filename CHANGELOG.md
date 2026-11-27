@@ -2,6 +2,22 @@
 
 All notable changes to NEXUS. Dates are UTC.
 
+## 0.9 — Settlement watcher + daily runner (2026-11-27)
+
+- `nexus/paper/settlement.py`: resolves open paper positions — looks up
+  each position's market on Gamma by condition_id, and when the market is
+  closed with final 1/0 outcome prices, settles through
+  `PaperEngine.settle()` and journals an `hb1_settlement` record. Closed-
+  without-final-prices and lookup failures keep the position open (safe).
+- `nexus/paper/state.py`: account persistence (`save_account`/
+  `load_account`) so the paper book survives across daily runs.
+- `.github/workflows/hb1_daily.yml`: daily chain at 13:00 UTC — settle,
+  then harness scan, then commit journal + account to the `hb1-paper`
+  state branch. Also triggers on main pushes (App tokens cannot call
+  workflow_dispatch). 30-day paper record starts now.
+- Tests: **50 passing** (6 new: persistence roundtrip, resolution
+  variants, settle/keep-open/lookup-failure/broken-gamma paths).
+
 ## 0.8 — H-B1 paper harness + v2 audit (2026-11-27)
 
 - `nexus/paper/hb1_harness.py`: daily pass that scans open binary markets

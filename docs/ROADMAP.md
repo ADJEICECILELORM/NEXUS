@@ -23,6 +23,9 @@ passes. Evidence lives in `docs/FINDINGS.md`; decisions in `docs/DECISIONS.md`.
 - [x] H-B1 paper harness: daily scan of ≥0.97 zone, entries at 7d-before-end
 - [x] Decision-time book snapshots recorded (replaces assumed costs)
       — first live pass 2026-11-27: 4 entries, half-spreads 0.019–0.023
+- [x] Settlement watcher + account persistence + daily CI runner
+      (hb1-daily workflow, hb1-paper state branch) — record clock started
+      2026-11-27
 - [ ] 30-day minimum paper record before any further claim
 - [ ] ORACLE calibration shadow (LLM forecasts logged, zero authority)
 
