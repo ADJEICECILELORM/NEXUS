@@ -2,6 +2,31 @@
 
 All notable changes to NEXUS. Dates are UTC.
 
+## 0.8 — H-B1 paper harness + v2 audit (2026-11-27)
+
+- `nexus/paper/hb1_harness.py`: daily pass that scans open binary markets
+  inside the D2 lag window (7d ± 1d, targeted via keyset `end_date_min/max`
+  + `order=endDate`), takes decision-time book snapshots for both tokens,
+  and paper-enters any token with book midpoint ≥ 0.97 through the
+  PaperEngine ($200 cap per F4). Every decision — entered or rejected — is
+  journaled with half-spread, ask depth, and $100 slippage.
+- **First live pass (2026-11-27 13:16 UTC)**: 300 markets scanned, 164 in
+  window, 4 candidates found and paper-entered (crypto price markets ending
+  Dec 3). First cost datapoints: half-spreads 0.0195–0.0225 — ~10× the D2
+  assumed 0.002 and ~2.5× F4's top-volume median. Small markets are thin;
+  the harness will accumulate the real cost distribution.
+- **HTTP layer fix**: Cloudflare now blocks the default Python-urllib
+  User-Agent on clob.polymarket.com (403 error 1010, verified live). A
+  browser-like UA is sent by default; verified 200 with book payloads.
+- `docs/V2_AUDIT.md`: line-level triage of `nexus_v2_final.zip` (operator
+  uploaded it to `ADJEICECILELORM/nexus-zip`). All 5 external-audit claims
+  confirmed (dead market-data wiring, ZEUS records unfilled orders, AEGIS
+  close/kill path never called, WATCHDOG never restarts, security holes)
+  plus 6 new defects. Verdicts: keep roles ORACLE/MIDAS/AEGIS + HERALD as
+  signal feed; rebuild bodies; kill ARGUS/LINK/MACRO/GA/deploy/wallets.
+- Full rebuild of the codebase pushed to GitHub after the sandbox wipe
+  (commits 9deb7af..4719276); CI green, 37 tests. 44 tests now.
+
 ## 0.7 — Paper engine (2026-11-26)
 
 - `nexus/paper/engine.py`: `PaperEngine` with `PaperConfig` (starting cash
