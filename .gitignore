@@ -1,0 +1,16 @@
+# research data stays local
+data/
+
+# journals
+*.jsonl
+!tests/**/*.jsonl
+
+# env / venvs
+.env
+.venv/
+venv/
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
