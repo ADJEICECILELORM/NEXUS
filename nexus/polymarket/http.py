@@ -17,6 +17,12 @@ import zlib
 from typing import Any
 
 DEFAULT_TIMEOUT = 20.0
+# Polymarket's Cloudflare edge rejects the default Python-urllib User-Agent
+# with 403 error 1010; a browser-like UA passes. Verified live 2026-11-27.
+BROWSER_USER_AGENT = (
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+)
 DEFAULT_MAX_RETRIES = 3
 RETRYABLE_CODES = {429, 500, 502, 503, 504}
 
@@ -87,7 +93,12 @@ class HttpJsonClient:
         last_err: Exception | None = None
         for attempt in range(self.max_retries + 1):
             try:
-                req = urllib.request.Request(url, headers={"Accept-Encoding": "gzip"})
+                # Browser User-Agent: Polymarket's Cloudflare edge returns
+                # 403 (error 1010) to the default Python-urllib UA.
+                req = urllib.request.Request(url, headers={
+                    "Accept-Encoding": "gzip",
+                    "User-Agent": BROWSER_USER_AGENT,
+                })
                 with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                     return resp.read(), resp.status
             except urllib.error.HTTPError as e:
