@@ -36,8 +36,11 @@ passes. Evidence lives in `docs/FINDINGS.md`; decisions in `docs/DECISIONS.md`.
       settlement watcher, persistent kill switch, theme exposure with
       question pass-through, UTC daily bucket (2026-11-27)
 - [ ] ORACLE authority gate: Brier < market's on ≥100 live forecasts
-- [ ] ORACLE calibration shadow: daily LLM forecasts logged + scored vs
-      market (blocked: needs operator LLM API key)
+- [x] ORACLE scorecard built + D6 pre-registered: daily forecasts logged
+      + scored vs market in hb1-daily chain; forecast step auto-skips until
+      the operator adds the ANTHROPIC_API_KEY repo secret (2026-11-28)
+- [ ] ORACLE data collection (running once key is added; ~4-6 weeks to
+      n=100 settled forecasts at the D2 window's turnover)
 
 ## Phase 4 — Execution (off by default)
 - [ ] Requires: Phase 2 record + operator signoff + wallet custody decision

@@ -143,3 +143,63 @@ construction.
 **Status.** Labeled POST-HOC per the header rule. The amendment fixes a
 specification error in the sampling frame, not an inconvenient result; the
 first run's INSUFFICIENT outcome is preserved in FINDINGS F4 for the record.
+
+---
+
+## D6 — ORACLE scorecard protocol (2026-11-28, pre-registered BEFORE any forecast)
+
+**Question.** Does an LLM hold independent predictive signal about target-zone
+Polymarket markets, beyond what the market price already encodes?
+
+**Evidence base.** F2: the market is well-calibrated (Brier 0.0882 on 420
+decided observations). poly-agent THESIS.md: LLM agents agree with the market
+within 5% on 96% of trials and lose money from Kelly on neutral calibration on
+$1M+ markets; the hypothesized alpha zone is $10K–$500K non-sports. No public
+project publishes a pre-registered LLM-vs-market scorecard (RESEARCH.md gap
+analysis).
+
+**Design — one forecast arm, deliberately unanchored.**
+
+- **Population.** Markets in the same daily window the H-B1 harness scans:
+  `end_date` in [now+6d, now+9d], active, not closed. Both sports and
+  non-sports are collected, but scoring is reported **split by theme class**
+  (sports vs non-sports) so the zone claim is testable post hoc without
+  cherry-picking.
+- **Arm A only (unanchored).** The LLM sees the question and the resolution
+  rules and is asked for `P(YES)`. It is **not** shown the market price. This
+  measures independent signal. A price-anchored arm would mostly re-emit the
+  price (equal Brier, zero information) and is explicitly deferred; adding it
+  later requires a labeled POST-HOC amendment.
+- **Model.** One fixed model per phase, recorded with each forecast. Changing
+  the model starts a new phase; scores never pool across models.
+- **Cadence.** One forecast per market per day while it remains in window
+  (so each market contributes up to 4 forecasts at lags ~9/8/7/6d). The
+  primary scoring set uses **only the last forecast per market** (lag ~6-7d),
+  matching the H-B1 decision lag; all forecasts are stored.
+- **Baseline.** The market midpoint of the same token, captured at the same
+  timestamp as the forecast.
+
+**Scoring (mechanical).**
+
+1. Brier per settled forecast: `b = (p − outcome)^2`, outcome ∈ {0,1} from
+   `resolution_from_market` (1.0/0.0 only; anything else leaves the forecast
+   unsettled).
+2. Paired difference per settled market: `d = brier_llm − brier_market`
+   (last-forecast-per-market set). Primary statistic: mean(d).
+3. **PASS** requires ALL of: (a) ≥ 100 settled markets in the primary set;
+   (b) mean(d) < 0; (c) bootstrap 95% CI of mean(d) (10,000 resamples) lies
+   entirely below 0 — separately for the non-sports split and overall.
+4. **NO EDGE** = ≥ 100 settled and (b) or (c) fails. **INSUFFICIENT** = < 100
+   settled. Neither grants authority.
+
+**Authority rule (unchanged from D1).** ORACLE has **zero authority** during
+measurement: no sizing, no gating of any trade, no paper trades on its output.
+Only a D6 PASS (non-sports split) promotes ORACLE to a paper-trading role, and
+that promotion itself gets a new pre-registered decision before it acts.
+
+**Cost guard.** ≤ 30 forecasts/day, one API call each. If the key is absent
+the daily chain skips the step silently; nothing else is blocked on it.
+
+**Falsifiability.** This decision is committed before the first forecast is
+made. If ORACLE is later described anywhere as "validated" without a D6 PASS
+line in FINDINGS, that claim is void per the header rule.

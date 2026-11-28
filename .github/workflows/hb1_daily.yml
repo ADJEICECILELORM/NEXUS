@@ -4,9 +4,11 @@ name: hb1-daily
 #   1. sync code from main onto this state branch (data lives here)
 #   2. settle anything resolved (settlement watcher)
 #   3. scan the D2 lag window and paper-enter new candidates (harness)
-#   4. regenerate the measured-cost report
-#   5. commit journal + account + costs to the hb1-paper state branch
-# Paper only — the harness never places orders.
+#   4. ORACLE scorecard: forecast + score (D6) — silently skipped until
+#      the ANTHROPIC_API_KEY repo secret exists
+#   5. regenerate the measured-cost report
+#   6. commit journal + account + costs + oracle data to the hb1-paper state branch
+# Paper only — the harness never places orders. ORACLE has zero authority per D1/D6.
 
 on:
   schedule:
@@ -56,6 +58,17 @@ jobs:
       - name: H-B1 harness pass (scan + paper-enter)
         run: python -m nexus.paper.hb1_harness --max-markets 500 --journal data/hb1_paper.jsonl --account data/hb1_account.json --aegis data/hb1_aegis.json
 
+      - name: ORACLE forecast pass (D6, skipped without API key)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python -m nexus.oracle.scorecard forecast --journal data/oracle.jsonl
+
+      - name: ORACLE score settled forecasts (D6)
+        run: python -m nexus.oracle.scorecard score --journal data/oracle.jsonl
+
+      - name: ORACLE report
+        run: python -m nexus.oracle.scorecard report --journal data/oracle.jsonl > data/oracle_report.md
+
       - name: Cost report (measured executable costs in the H-B1 zone)
         run: python -m nexus.paper.cost_report --journal data/hb1_paper.jsonl --markdown > data/costs.md
 
@@ -64,6 +77,8 @@ jobs:
           git config user.name "nexus-paper-bot"
           git config user.email "actions@users.noreply.github.com"
           git add -f data/hb1_paper.jsonl data/hb1_account.json data/hb1_aegis.json data/costs.md
+          git add -f data/oracle.jsonl 2>/dev/null || true
+          git add -f data/oracle_report.md 2>/dev/null || true
           git diff --cached --quiet && echo "no changes" && exit 0
           git commit -m "hb1-paper: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
           git push origin hb1-paper
