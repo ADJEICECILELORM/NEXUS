@@ -2,6 +2,27 @@
 
 All notable changes to NEXUS. Dates are UTC.
 
+## 0.11 — ORACLE scorecard (2026-11-28)
+
+- **D6 pre-registered** in `docs/DECISIONS.md` BEFORE any forecast: unanchored
+  LLM P(YES) on the same daily window as the H-B1 harness, market midpoint as
+  baseline, paired Brier on settled markets (last forecast per market),
+  PASS = n>=100 AND mean diff < 0 AND bootstrap 95% CI of the diff entirely
+  below 0 (overall + non-sports split). Zero authority during measurement.
+- `nexus/oracle/llm.py`: stdlib Anthropic Messages client (retry on 429/5xx,
+  hard fail 4xx), strict `PROBABILITY:` parsing (explicit % sign tolerated,
+  out-of-range = error), deterministic FakeLlm for tests.
+- `nexus/oracle/scorecard.py`: forecast pass (same D2 window, one forecast per
+  market per UTC day, <=30/day cost guard, market midpoint captured at
+  forecast time), settlement scoring (reuses `resolution_from_market`,
+  idempotent via already-scored set), D6 verdict + bootstrap CI (seeded),
+  markdown report. CLI: `python -m nexus.oracle.scorecard
+  forecast|score|report`.
+- Wired into `hb1_daily.yml`: forecast + score + report steps run daily;
+  the forecast step silently skips while `ANTHROPIC_API_KEY` repo secret is
+  absent, so nothing else is blocked on the key.
+- Tests: **80 passing** (16 new ORACLE tests).
+
 ## 0.10 — AEGIS rebuild (2026-11-27)
 
 - `nexus/paper/aegis.py`: event-driven risk governor, rebuilt from scratch
