@@ -15,8 +15,17 @@ All notable changes to NEXUS. Dates are UTC.
   then harness scan, then commit journal + account to the `hb1-paper`
   state branch. Also triggers on main pushes (App tokens cannot call
   workflow_dispatch). 30-day paper record starts now.
-- Tests: **50 passing** (6 new: persistence roundtrip, resolution
-  variants, settle/keep-open/lookup-failure/broken-gamma paths).
+- `nexus/paper/cost_report.py`: aggregates the harness's decision-time
+  book snapshots (half-spread, $100 slippage, ask depth) into JSON or a
+  markdown report; wired into the daily chain (`data/costs.md`). This is
+  the accumulating measured-cost dataset for the zone — if the ~10x gap
+  vs the D2 assumption persists, a labeled D-amendment re-grades F3 at
+  measured costs (D4/D5 pattern).
+- `docs/RESEARCH.md`: second-pass landscape survey (2026-11-27) —
+  polybot, poly-maker (maker math to bank for MIDAS), skharchikov
+  ensemble, PMXT; practitioner post-mortems confirm F1/F4; gap analysis
+  (nobody publishes pre-registered results or executable-cost data).
+- Tests: **54 passing**.
 
 ## 0.8 — H-B1 paper harness + v2 audit (2026-11-27)
 
