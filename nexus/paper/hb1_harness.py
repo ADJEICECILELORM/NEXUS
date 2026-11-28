@@ -25,6 +25,7 @@ from typing import Optional
 from nexus.journal import Journal
 from nexus.polymarket.clob import Book, ClobPublicClient, fill_from_book
 from nexus.polymarket.gamma import GammaClient, Market
+from nexus.paper.aegis import Aegis, AegisConfig
 from nexus.paper.engine import PaperConfig, PaperEngine
 from nexus.paper.state import load_account, save_account
 
@@ -148,6 +149,7 @@ def run(
     engine: PaperEngine,
     journal: Journal,
     *,
+    aegis: Aegis | None = None,
     now: Optional[datetime] = None,
     max_markets: int = 300,
     entry_usd: float = MAX_ENTRY_USD,
@@ -208,6 +210,19 @@ def run(
         summary["snapshot_half_spreads"].append(round(cand.half_spread, 6))
         summary["snapshot_slippage_100"].append(cand.slippage_100)
 
+        # AEGIS pre-trade gate (kill switch, caps, theme exposure).
+        if aegis is not None:
+            ok, reason = aegis.pre_trade_check(
+                cand.token_id, entry_usd, question=cand.question,
+                now=now,
+            )
+            if not ok:
+                summary["aegis_blocked"] = summary.get("aegis_blocked", 0) + 1
+                journal.append({**cand.to_record(), "type": "hb1_decision",
+                                "outcome": "aegis_blocked", "reason": reason,
+                                "entry_usd": entry_usd})
+                continue
+
         book = books[cand.token_id]
         fill = engine.buy(
             token_id=cand.token_id,
@@ -219,6 +234,8 @@ def run(
         outcome = "filled" if fill is not None else "rejected"
         if fill is not None:
             summary["entered"] += 1
+            if aegis is not None:
+                aegis.apply_fill(cand.token_id, entry_usd, question=cand.question)
         else:
             summary["rejected"] += 1
         journal.append({**cand.to_record(), "type": "hb1_decision",
@@ -237,6 +254,7 @@ def main() -> None:
     parser.add_argument("--account", default="data/hb1_account.json")
     parser.add_argument("--max-markets", type=int, default=300)
     parser.add_argument("--entry-usd", type=float, default=MAX_ENTRY_USD)
+    parser.add_argument("--aegis", default="data/hb1_aegis.json")
     args = parser.parse_args()
 
     gamma = GammaClient()
@@ -245,12 +263,15 @@ def main() -> None:
     engine = PaperEngine(cfg, Journal(args.journal))
     engine.account = load_account(args.account, cfg)
     journal = Journal(args.journal)
+    aegis = Aegis.load(engine.account, args.aegis, AegisConfig(), journal)
 
     summary = run(
         gamma, clob, engine, journal,
+        aegis=aegis,
         max_markets=args.max_markets, entry_usd=args.entry_usd,
     )
     save_account(engine.account, args.account)
+    aegis.save(args.aegis)
     print(json.dumps(summary, indent=1))
 
 

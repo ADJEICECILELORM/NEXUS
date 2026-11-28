@@ -2,6 +2,26 @@
 
 All notable changes to NEXUS. Dates are UTC.
 
+## 0.10 — AEGIS rebuild (2026-11-27)
+
+- `nexus/paper/aegis.py`: event-driven risk governor, rebuilt from scratch
+  per D1 and the V2_AUDIT defect list. Fixes every recorded v2 defect:
+  checks attach to real ledger events (fills/settlements, not submission
+  intents); the caller passes the market question so correlated-theme
+  exposure actually buckets (v2's silent bypass); the daily loss bucket is
+  UTC; the kill switch + daily PnL + per-token theme exposure persist to
+  disk across runs; settlement releases exactly the settled token's
+  committed exposure.
+- Mechanical checks, in order: kill switch → non-positive size → position
+  cap ($200 per F4) → max open positions → theme cap (15% of bankroll) →
+  daily realized loss (−10% bankroll kills the day).
+- Word-boundary keyword matching for themes (substring matching misfired:
+  "something" contains "eth").
+- Wired into the harness (pre-trade gate + fill ingestion) and the
+  settlement watcher (settlement ingestion + kill evaluation); both
+  persist AEGIS state daily.
+- Tests: **64 passing** (10 new AEGIS tests).
+
 ## 0.9 — Settlement watcher + daily runner (2026-11-27)
 
 - `nexus/paper/settlement.py`: resolves open paper positions — looks up
