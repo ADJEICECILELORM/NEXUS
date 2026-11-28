@@ -23,13 +23,21 @@ passes. Evidence lives in `docs/FINDINGS.md`; decisions in `docs/DECISIONS.md`.
 - [x] H-B1 paper harness: daily scan of ≥0.97 zone, entries at 7d-before-end
 - [x] Decision-time book snapshots recorded (replaces assumed costs)
       — first live pass 2026-11-27: 4 entries, half-spreads 0.019–0.023
+- [x] Settlement watcher + account persistence + daily CI runner
+      (hb1-daily workflow, hb1-paper state branch) — record clock started
+      2026-11-27
 - [ ] 30-day minimum paper record before any further claim
 - [ ] ORACLE calibration shadow (LLM forecasts logged, zero authority)
 
-## Phase 3 — Agent layer (blocked by Phase 2)
+## Phase 3 — Agent layer (in progress)
 - [ ] 3 roles only: ORACLE (calibrated signal feed), MIDAS (maker zone),
       AEGIS (risk governance)
+- [x] AEGIS rebuilt: event-driven risk governor wired to harness +
+      settlement watcher, persistent kill switch, theme exposure with
+      question pass-through, UTC daily bucket (2026-11-27)
 - [ ] ORACLE authority gate: Brier < market's on ≥100 live forecasts
+- [ ] ORACLE calibration shadow: daily LLM forecasts logged + scored vs
+      market (blocked: needs operator LLM API key)
 
 ## Phase 4 — Execution (off by default)
 - [ ] Requires: Phase 2 record + operator signoff + wallet custody decision

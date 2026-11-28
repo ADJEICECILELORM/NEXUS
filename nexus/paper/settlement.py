@@ -17,7 +17,8 @@ from typing import Optional
 
 from nexus.journal import Journal
 from nexus.polymarket.gamma import GammaClient, Market
-from nexus.paper.engine import PaperAccount, PaperEngine
+from nexus.paper.aegis import Aegis
+from nexus.paper.engine import PaperEngine
 from nexus.paper.state import save_account
 
 WIN_THRESHOLD = 0.999     # final winner price (matches winner_index in research)
@@ -52,6 +53,8 @@ def settle_pending(
     gamma: GammaClient,
     engine: PaperEngine,
     journal: Journal,
+    *,
+    aegis: Aegis | None = None,
 ) -> dict:
     """
     Settle every open position whose market has resolved. Positions sharing
@@ -92,6 +95,8 @@ def settle_pending(
             delta = engine.settle(token_id, price)
             summary["settled"] += 1
             summary["pnl"] += delta
+            if aegis is not None:
+                aegis.apply_settlement(token_id, market.question, delta)
             journal.append({
                 "type": "hb1_settlement",
                 "market_id": market_id,
@@ -110,6 +115,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="H-B1 settlement watcher")
     parser.add_argument("--account", default="data/hb1_account.json")
     parser.add_argument("--journal", default="data/hb1_paper.jsonl")
+    parser.add_argument("--aegis", default="data/hb1_aegis.json")
     args = parser.parse_args()
 
     from nexus.paper.engine import PaperConfig
@@ -119,9 +125,11 @@ def main() -> None:
     cfg = PaperConfig()
     engine = PaperEngine(cfg, journal)
     engine.account = load_account(args.account, cfg)
+    aegis = Aegis.load(engine.account, args.aegis, journal=journal)
 
-    summary = settle_pending(GammaClient(), engine, journal)
+    summary = settle_pending(GammaClient(), engine, journal, aegis=aegis)
     save_account(engine.account, args.account)
+    aegis.save(args.aegis)
     print(json.dumps(summary, indent=1))
 
 

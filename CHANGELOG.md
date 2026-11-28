@@ -2,6 +2,51 @@
 
 All notable changes to NEXUS. Dates are UTC.
 
+## 0.10 — AEGIS rebuild (2026-11-27)
+
+- `nexus/paper/aegis.py`: event-driven risk governor, rebuilt from scratch
+  per D1 and the V2_AUDIT defect list. Fixes every recorded v2 defect:
+  checks attach to real ledger events (fills/settlements, not submission
+  intents); the caller passes the market question so correlated-theme
+  exposure actually buckets (v2's silent bypass); the daily loss bucket is
+  UTC; the kill switch + daily PnL + per-token theme exposure persist to
+  disk across runs; settlement releases exactly the settled token's
+  committed exposure.
+- Mechanical checks, in order: kill switch → non-positive size → position
+  cap ($200 per F4) → max open positions → theme cap (15% of bankroll) →
+  daily realized loss (−10% bankroll kills the day).
+- Word-boundary keyword matching for themes (substring matching misfired:
+  "something" contains "eth").
+- Wired into the harness (pre-trade gate + fill ingestion) and the
+  settlement watcher (settlement ingestion + kill evaluation); both
+  persist AEGIS state daily.
+- Tests: **64 passing** (10 new AEGIS tests).
+
+## 0.9 — Settlement watcher + daily runner (2026-11-27)
+
+- `nexus/paper/settlement.py`: resolves open paper positions — looks up
+  each position's market on Gamma by condition_id, and when the market is
+  closed with final 1/0 outcome prices, settles through
+  `PaperEngine.settle()` and journals an `hb1_settlement` record. Closed-
+  without-final-prices and lookup failures keep the position open (safe).
+- `nexus/paper/state.py`: account persistence (`save_account`/
+  `load_account`) so the paper book survives across daily runs.
+- `.github/workflows/hb1_daily.yml`: daily chain at 13:00 UTC — settle,
+  then harness scan, then commit journal + account to the `hb1-paper`
+  state branch. Also triggers on main pushes (App tokens cannot call
+  workflow_dispatch). 30-day paper record starts now.
+- `nexus/paper/cost_report.py`: aggregates the harness's decision-time
+  book snapshots (half-spread, $100 slippage, ask depth) into JSON or a
+  markdown report; wired into the daily chain (`data/costs.md`). This is
+  the accumulating measured-cost dataset for the zone — if the ~10x gap
+  vs the D2 assumption persists, a labeled D-amendment re-grades F3 at
+  measured costs (D4/D5 pattern).
+- `docs/RESEARCH.md`: second-pass landscape survey (2026-11-27) —
+  polybot, poly-maker (maker math to bank for MIDAS), skharchikov
+  ensemble, PMXT; practitioner post-mortems confirm F1/F4; gap analysis
+  (nobody publishes pre-registered results or executable-cost data).
+- Tests: **54 passing**.
+
 ## 0.8 — H-B1 paper harness + v2 audit (2026-11-27)
 
 - `nexus/paper/hb1_harness.py`: daily pass that scans open binary markets

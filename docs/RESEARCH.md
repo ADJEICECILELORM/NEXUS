@@ -44,3 +44,31 @@ study found:
    claimed thin zone — consistent with our F3/F4 evidence.
 3. Maker-side liquidity provision (H-A2 dormant tail) is where the surveyed
    projects never looked — measured in F5, unproven as a strategy.
+
+## Landscape update (2026-11-27, second pass)
+
+Re-surveyed with fresh searches; the picture from the first pass holds and
+sharpens. Notable projects:
+
+| Project | What it is | Read for NEXUS |
+|---|---|---|
+| Polymarket/agents (official) | LLM agent framework | Source of the poly-agent evidence above; validates the space |
+| cryptuon/polybot | Multi-venue (Polymarket/Kalshi/Opinion) agent framework, "safe, auditable" angle | Closest philosophical cousin; typed risk-first design worth watching |
+| warproxxx/poly-maker | Maker-only market-making bot (political markets): depth-weighted microprice + EWMA of signed trade flow, paper mode | **The MIDAS role already exists as working OSS.** Bank its fair-value model for any future H-A2 build |
+| skharchikov/polymarket-bot | Rust bots + XGBoost ensemble + LLM consensus + Bayesian updating; copy-trading bot | Most serious quant engineering; its feature set is a menu for ORACLE |
+| OctoBot-Prediction-Market | Consumer copy-trading + arb | Retail end; copy-trading is the most crowded lane |
+| CloddsBot | Multi-platform AI agent (10 venues), big claims | Claims ≫ evidence; the cautionary shape |
+| evan-kolberg/prediction-market-backtesting, PMXT | Backtesting tooling; "CCXT for prediction markets" | PMXT = cheap multi-venue awareness if ever needed |
+
+Practitioner post-mortems (Reddit) confirm our measured results: a bot
+"winning 68% of the time and still losing money" is exactly the F4 finding
+(spread beats a naive edge); arb posts confirm F1.
+
+**Where the gap still is:** every public project is framework-first and
+nearly none publish pre-registered results, cost models, or OOS discipline.
+Nobody publishes decision-time executable-cost data for the ≥0.97 zone.
+NEXUS's differentiators remain: pre-registration (D2), loud kills (F1),
+measured costs (F4), the accumulating harness cost dataset, and the
+append-only decision log. The crowded lanes to avoid: copy-trading and
+generic LLM-trades-everything agents (poly-agent evidence shows they
+underperform the market on Brier).
